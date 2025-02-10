@@ -18,6 +18,15 @@ In the inputs file, setup the 2d matrix in the `grid` variable.
  - Anything that is not an `R` or empty space will be considered a building ID;
  - Specify the storages in the `storage_ids` list.
 
+## Keeping track of road width and adding a node whenever it changes.
+This step has proven to be quite a challenge.
+
+Basic examples are easy to get around but there seems to be too many edge cases.
+
+The `width_attempt.py` script is a variation of the `main.py` with an attempt to implement the road width step.
+
+Unfortunately, I could not implement this step in a 100% consistent and working way, therefore I decided to write it in a different script file so the `main` would not get messy.
+
 # Logic
 First, iterate over the grid and keep track of:
  - The buildings, by simply checking if the current cell is not an `R` or empty space;
@@ -36,10 +45,3 @@ To avoid duplicated nodes (X -- Y and Y -- X), it's necessary to keep track of t
 To avoid buildings poiting to themselves because of roads tangencing them, only add edges if `origin != current_cell`.
 
 Using dictionaries and sets whenever possible to speedup lookups with O(1) time.
-
-## Keeping track of road width and adding a node whenever it changes.
-This step has proven to be quite a challenge.
-
-Basic examples are easy to get around but there are way too many edge cases.
-
-I wonder if there's a more robust way of doing it that I can't think of, or if it really is just very complicated.

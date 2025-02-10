@@ -1,6 +1,6 @@
 import graphviz
 
-from inputs import grid
+from inputs import grid_with_width as grid
 from inputs import storage_ids
 
 
@@ -8,9 +8,9 @@ edges = set()
 dot = graphviz.Graph(engine="neato")
 
 
-def new_edge(head, tail):
+def new_edge(head, tail, weight):
     if (head, tail) not in edges:
-        dot.edge(head, tail)
+        dot.edge(head, tail, label=str(weight))
         edges.add((head, tail))
 
 
@@ -19,8 +19,10 @@ def is_inbound(i, j):
 
 
 def count_R_neighbors(i, j):
-    r_neighbors = 0
-    v_neighbors = 0
+    r_orth_neighbors = 0
+    r_diag_neighbors = 0
+    v_orth_neighbors = 0
+    v_diag_neighbors = 0
     dirs = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
     for x, y in dirs:
@@ -31,15 +33,35 @@ def count_R_neighbors(i, j):
 
         cell = str(grid[ci][cj]).strip()
 
-        if cell == 'R':
-            r_neighbors += 1
+        if cell == '':
+            continue
+
+        if cell[0] == 'R':
+            r_orth_neighbors += 1
         elif cell != '':
-            v_neighbors += 1
+            v_orth_neighbors += 1
 
-    return r_neighbors, v_neighbors
+    diags = ((1, 1), (-1, -1), (1, -1), (-1, 1))
+    for x, y in diags:
+        ci, cj = i + x, j + y
+
+        if not is_inbound(ci, cj):
+            continue
+
+        cell = str(grid[ci][cj]).strip()
+
+        if cell == '':
+            continue
+
+        if cell[0]== 'R':
+            r_diag_neighbors += 1
+        elif cell != '':
+            v_diag_neighbors += 1
+
+    return r_orth_neighbors, r_diag_neighbors, v_orth_neighbors, v_diag_neighbors
 
 
-def R_dfs(i, j, visited, vertices, origin):
+def R_dfs(i, j, visited, vertices, origin, weight=0):
     if not is_inbound(i, j):
         return
 
@@ -52,18 +74,20 @@ def R_dfs(i, j, visited, vertices, origin):
         return
     visited.add((i, j))
 
-    if cell != 'R':
+
+    if cell[0] != 'R':
         if origin != cell:
-            new_edge(origin, cell)
+            new_edge(origin, cell, weight)
         return
     if vertices.get((i, j)) is not None:
-        new_edge(origin, vertices[(i, j)])
+        new_edge(origin, vertices[(i, j)], weight)
         return
 
-    R_dfs(i + 1, j, visited, vertices, origin)
-    R_dfs(i - 1, j, visited, vertices, origin)
-    R_dfs(i, j + 1, visited, vertices, origin)
-    R_dfs(i, j - 1, visited, vertices, origin)
+    weight = cell[1]
+    R_dfs(i + 1, j, visited, vertices, origin, weight)
+    R_dfs(i - 1, j, visited, vertices, origin, weight)
+    R_dfs(i, j + 1, visited, vertices, origin, weight)
+    R_dfs(i, j - 1, visited, vertices, origin, weight)
 
 
 def dfs(id_, i, j, vertices):
@@ -72,7 +96,10 @@ def dfs(id_, i, j, vertices):
     
     cell = str(grid[i][j]).strip()
 
-    if cell == 'R':
+    if cell == '':
+        return
+
+    if cell[0] == 'R':
         R_dfs(i, j, set(), vertices, id_)
 
     if cell != id_:
@@ -98,21 +125,27 @@ def main():
             if cell == '' or buildings.get(cell) is not None:
                 continue
 
-            if cell == 'R':
-                rs, vs = count_R_neighbors(i, j)
-                if rs > 2:
+            if cell[0] == 'R':
+                rorths, rdiags, vorths, vdiags = count_R_neighbors(i, j)
+
+                grid[i][j] = 'R1'
+                if rorths + rdiags + vorths + vdiags > 4:
+                    grid[i][j] = 'R2'
+
+                if (rorths == 4 and rdiags == 3) or \
+                    (rorths > 2 and rdiags == 0):
                     dot.node(
                         name=f"Intersection{len(intersections) + 1}",
                         label=f"Intersection {len(intersections) + 1}",
                         color="blue",
-                        pos=f"{j + 1},{len(grid) - i}!"
+                        pos=f"{2 * (j + 1)},{len(grid) - i}!"
                     )
                     intersections[(i, j)] = f"Intersection{len(intersections) + 1}"
-                elif (rs < 2 and vs == 0) or rs == 0:
+                elif (rorths < 2 and vdiags == 0) or rorths == 0:
                     dot.node(
                         name=f"Deadend{len(deadends) + 1}",
                         label=f"Deadend {len(deadends) + 1}",
-                        pos=f"{j + 1},{len(grid) - i}!"
+                        pos=f"{2 * (j + 1)},{len(grid) - i}!"
                     )
                     deadends[(i, j)] = f"Deadend{len(deadends) + 1}"
                 continue
@@ -130,7 +163,7 @@ def main():
                 name=cell,
                 label=label,
                 color=color,
-                pos=f"{j + 1},{len(grid) - i}!"
+                pos=f"{2 * (j + 1)},{len(grid) - i}!"
             )
 
     vertices = intersections | deadends
@@ -140,7 +173,7 @@ def main():
         grid[i][j] = val
         dfs(val, i, j, vertices)
 
-    dot.render('graph', format='png', view=True)
+    dot.render('graph_width_attempt', format='png', view=True)
 
 
 if __name__ == '__main__':
