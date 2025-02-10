@@ -1,0 +1,28 @@
+graph {
+	S1 [label="Storage S1" color=green pos="1,10!"]
+	P3 [label="Building P3" color=red pos="7,10!"]
+	Deadend1 [label="Deadend 1" pos="5,8!"]
+	P1 [label="Building P1" color=red pos="4,7!"]
+	Intersection1 [label="Intersection 1" color=blue pos="1,6!"]
+	Intersection2 [label="Intersection 2" color=blue pos="9,6!"]
+	Intersection3 [label="Intersection 3" color=blue pos="1,4!"]
+	P2 [label="Building P2" color=red pos="9,3!"]
+	P4 [label="Storage P4" color=green pos="3,2!"]
+	Intersection4 [label="Intersection 4" color=blue pos="7,2!"]
+	S1 -- Intersection1
+	S1 -- P3
+	P3 -- Intersection2
+	P1 -- Intersection4
+	P1 -- P4
+	P1 -- Intersection3
+	P1 -- Deadend1
+	P1 -- Intersection2
+	P1 -- Intersection1
+	P2 -- Intersection4
+	P2 -- Intersection2
+	P4 -- Intersection3
+	P4 -- Intersection4
+	Intersection1 -- Intersection3
+	Intersection2 -- Intersection4
+	Intersection3 -- Intersection4
+}
